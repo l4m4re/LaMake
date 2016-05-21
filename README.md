@@ -103,10 +103,9 @@ Based on:
 
 # Standard/default directory structure:
 
-
-     Topdir -----  bin          binaries
+     Topdir -+---  bin          binaries
              +---  src          source code
-               +-  .obj         object, dependencies, etc.
+             | +-  .obj         object, dependencies, etc.
              +---  include      include files
              +---  lib          (shared) libraries
              +---  doc          documentation
