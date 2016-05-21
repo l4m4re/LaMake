@@ -94,14 +94,10 @@ Note: $(prefix) defaults to $(DESTDIR)/usr
 Based on:
 ---------
 
-* [Recursive Makefile
-* Example](http://www.lackof.org/taggart/hacking/make-example/)
-* [Autodependencies with GNU
-* make](http://scottmcpeak.com/autodepend/autodepend.html)
-* [Using make and writing
-* Makefiles](https://www.cs.swarthmore.edu/~newhall/unixhelp/howto_makefiles.html)
-* [Generic Makefile for C/C++
-* Programs](https://sourceforge.net/projects/gcmakefile/)
+* [Recursive Makefile Example](http://www.lackof.org/taggart/hacking/make-example/)
+* [Autodependencies with GNU make](http://scottmcpeak.com/autodepend/autodepend.html)
+* [Using make and writing Makefiles](https://www.cs.swarthmore.edu/~newhall/unixhelp/howto_makefiles.html)
+* [Generic Makefile for C/C++ Programs](https://sourceforge.net/projects/gcmakefile/)
 * PMake (private source)
 
 
