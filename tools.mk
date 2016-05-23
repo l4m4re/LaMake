@@ -54,7 +54,6 @@ else
     TEE         := | tee -a $(LOG)
 endif                                                                          
                                                                                
-
 CLEAN           := *.o a.out core *\~ log.* \
 		   *.ppc *.lint *.ppi $(TMPFILEBASE).* 
 
