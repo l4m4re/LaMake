@@ -8,7 +8,12 @@ $(TARGETS.c):$(OBJS.c) $(DEPS.c)
 	$(LINK.c)   $(OBJS.c) $(MY_LIBS) -o $@
 
 $(TARGETS.cc):$(OBJS.cc) $(OBJS.c) $(DEPS.cc) $(DEPS.c)
-	$(LINK.cxx) $(OBJS.cc) $(OBJS.c) $(MY_LIBS) -o $@
+	$(LINK.cc) $(OBJS.cc) $(OBJS.c) $(MY_LIBS) -o $@
+
+.PHONY: objs.c objs.cc
+
+objs.c: $(OBJS.c)
+objs.cc: $(OBJS.cc)
 
 ifndef NODEP
   ifneq ($(DEPS),)

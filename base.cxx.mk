@@ -28,10 +28,10 @@ DEP_OPT     ?= $(shell if `$(CC) --version | grep -i "gcc" >/dev/null`; then \
                   echo "-MM -MP"; else echo "-M"; fi )
 DEPEND      ?= $(CC)  $(DEP_OPT)  $(MY_CFLAGS) $(CFLAGS)
 DEPEND.d    ?= $(subst -g ,,$(DEPEND))
-COMPILE.c   ?= $(CC)  $(MY_CFLAGS) $(CFLAGS)   -c
-COMPILE.cxx ?= $(CXX) $(MY_CFLAGS) $(CXXFLAGS) -c
-LINK.c      ?= $(CC)  $(MY_CFLAGS) $(CFLAGS)   $(LDFLAGS)
-LINK.cxx    ?= $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(LDFLAGS)
+COMPILE.c   ?= $(CC)  $(MY_CFLAGS) $(CFLAGS.c)  -c
+COMPILE.cxx ?= $(CXX) $(MY_CFLAGS) $(CFLAGS.cc) -c
+LINK.c      ?= $(CC)  $(MY_CFLAGS.c)  $(CFLAGS.c)  $(LDFLAGS.c)
+LINK.cc     ?= $(CXX) $(MY_CFLAGS.cc) $(CFLAGS.cc) $(LDFLAGS.cc)
 
 
 #---------------------------------------------------------------------------
@@ -39,17 +39,17 @@ LINK.cxx    ?= $(CXX) $(MY_CFLAGS) $(CXXFLAGS) $(LDFLAGS)
 #  -g    adds debugging information to the executable file
 #  -Wall turns on most, but not all, compiler warnings
 #
-CFLAGS          ?= -Wall
-CXXFLAGS        ?= -Wall
+CFLAGS.c        ?= -Wall
+CFLAGS.cc       ?= -Wall
 ifneq ($(DEBUG),)
- CFLAGS         += -g
- CXXFLAGS       += -g
+ CFLAGS.c       += -g
+ CFLAGS.cc      += -g
 endif
 
-LIBDIRMINL      := -L$(LIBDIR)  #TODO : for each LIBDIR
-LDFLAGS         = $(LIBDIRMINL) $(OWNLDFLAGS)
+LDFLAGS.c       ?= -L$(LIBDIR) $(MY_LDFLAGS.c)
+LDFLAGS.cc      ?= -L$(LIBDIR) $(MY_LDFLAGS.cc)
 
-SRC.objs.c      ?= $(ALLSRC.c) $(AllSRC.c)
+SRC.objs.c      ?= $(ALLSRC.c) 
 OBJS.c          ?= $(addprefix $(OBJDIR)/, $(notdir $(addsuffix .o, \
 			$(basename $(SRC.objs.c))) ))
 DEPS.c          ?= $(OBJS.c:.o=.d)
@@ -58,6 +58,9 @@ SRC.objs.cc     ?= $(AllSRC.cc)
 OBJS.cc         ?= $(addprefix $(OBJDIR)/, $(notdir $(addsuffix .o, \
 			$(basename $(SRC.objs.cc))) ))
 DEPS.cc         ?= $(OBJS.cc:.o=.d)
+
+
+OBJS.all        += $(OBJS.c) $(OBJS.cc)
 
 # Construct targets in BINDIR
 ifeq ($(BINDIR),)

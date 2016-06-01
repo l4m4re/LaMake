@@ -39,6 +39,7 @@ UNINSTALLDIRS = $(SUBDIRS:%=uninstall-%)
 CLEANDIRS     = $(SUBDIRS:%=clean-%)
 TESTDIRS      = $(SUBDIRS:%=test-%)
 DOCDIRS       = $(SUBDIRS:%=doc-%)
+SHOWDIRS      = $(SUBDIRS:%=show-%)
 
 # and the rules.
 all: $(BUILDDIRS)
@@ -66,11 +67,16 @@ doc: $(DOCDIRS)
 $(DOCDIRS): 
 	$(MAKE) -C $(@:doc-%=%) doc
 
+show: $(SHOWDIRS)
+$(SHOWDIRS): 
+	$(MAKE) -C $(@:show-%=%) show
+
 .PHONY: subdirs $(SUBDIRS)
 .PHONY: subdirs $(BUILDDIRS)
 .PHONY: subdirs $(INSTALLDIRS)
 .PHONY: subdirs $(TESTDIRS)
 .PHONY: subdirs $(CLEANDIRS)
 .PHONY: subdirs $(DOCDIRS)
-.PHONY: all install uninstall clean test doc
+.PHONY: subdirs $(SHOWDIRS)
+.PHONY: all install uninstall clean test doc show
 #===========================================================================

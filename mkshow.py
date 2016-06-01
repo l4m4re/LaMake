@@ -24,7 +24,9 @@ def printCategory( category, items, isnested = False ):
 def printLanguage( language, ext ):
     vars = []
     for var in ["PROGS", "ALLSRC", "PROGSRC", "SRC", \
-                "TARGETS", "COMPILE", "LINK", "DEPEND"]:
+                "TARGETS", "COMPILE", "LINK", "DEPEND", \
+                "CFLAGS", "MY_CFLAGS", "LDFLAGS", "MY_LDFLAGS", \
+                "SRC.objs", "OBJS"]:
 #                "SRCSUFX", "HDRSUFX"] :
         vars.append( var+"."+ext )
 
@@ -46,7 +48,7 @@ print "show: "
 printCategory ("General", ["PROGRAMS", "LIBNAME", "LIBTYPE", \
                "SRCDIRS", "INCDIRS", "BINDIR", "LIBDIR", \
                "OBJDIR", "TESTDIR", "EXAMPLEDIR", "DOCDIR", \
-               "DEP_OPT", "AR"])
+               "DEP_OPT", "AR", "TEE"])
 
 printLanguage ("C"          , "c" )
 printLanguage ("C++"        , "cc" )

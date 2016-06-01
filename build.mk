@@ -16,9 +16,9 @@
 # a (shared) library will be built with the remaining sources.
 #---------------------------------------------------------------------------
 #PROGRAMS        = 
-#LIBNAME         = mylib
-LIBTYPE         ?= dylib        # default: dylib for dynamically linked .so
-                                # alternative: static 
+LIBNAME         ?= $(CURDIR)
+LIBTYPE         ?= static       # default: static
+                                # alternative: dylib for .so/.dll/dylib
 
 INSTALLTP       ?= release      # default: release: just the program or lib
                                 # alternative: develop: +headers, etc. 
@@ -30,8 +30,9 @@ SRCDIRS         ?= .
 INCDIRS         ?= ../include
 BINDIR          ?= ../bin
 LIBDIR          ?= ../lib
-TESTDIR         ?= ../test
-DOCDIR          ?= ../doc
+#TESTDIR         ?= ../test
+#EXAMPLEDIR      ?= ../examples
+#DOCDIR          ?= ../doc
 
 ## Note:
 ##
@@ -57,32 +58,31 @@ SRCSUFX.dts     ?= .dts .DTS
 # Headers suffixes
 HDRSUFX.cpa     ?= .h .H .hh .hpp .HPP .h++ .hxx .hp  # C, C++, (p)asm
 HDRSUFX.bas     ?= .bi .BI                            # Basic
+#HDRSUFX.pasm    ?= .hp .HP                            # pasm
+
 # Delete the default suffixes
-.SUFFIXES:
+.SUFFIXES :
 
 
-include LaMake/tools.mk
+# Rules are the core of LaMake. On the basis of a specific part of the
+# file name - most often the suffix - LaMake makes decisions on what to
+# do with it.  For example, a file with suffix .c can produce a file
+# with .o by compiling with the C compiler. Here is a list of suffixes
+# used by LaMake:
 
-#---------------------------------------------------------------------------
-# Flags 
-#---------------------------------------------------------------------------
-#
-#  -g    adds debugging information to the executable file
-#  -Wall turns on most, but not all, compiler warnings
-#
-CFLAGS          ?= -Wall
-CXXFLAGS        ?= -Wall
-ifneq ($(DEBUG),)
- CFLAGS         += -g
- CXXFLAGS       += -g
-endif
+.SUFFIXES : $(SRCSUFX.c) $(SRCSUFX.cc) $(SRCSUFX.bas) $(SRCSUFX.pasm) \
+            $(SRCSUFX.asm) $(SRCSUFX.dts) \
+            $(HDRSUFX.cpa) $(HDRSUFX.bas) $(HDRSUFX.pasm)
+
 
 #===========================================================================
 # The dirty details aka implementation.
 #===========================================================================
 
+include LaMake/tools.mk
+
 #---------------------------------------------------------------------------
-# Get source files 
+# Sources
 #---------------------------------------------------------------------------
 # Split PROGRAMS variable (set by the user) into the PROGS for each type
 PROGS.c    ?= $(foreach sfx, $(SRCSUFX.c),   $(filter %$(sfx),$(PROGRAMS)))
@@ -103,132 +103,87 @@ getprogswithdir  = $(foreach d, $(SRCDIRS), \
 # First set ALLSRC by calling getsrcs, so we get all existing sources of
 # a certain type. Then set PROGSRC by looking for PROGS in all SRCDIRS.
 # Finally, set SRC by filtering out the PROGSRC from ALLSRC.
-ALLSRC.c        ?= $(call getsrcs,$(SRCSUFX.c)) 
-PROGSRC.c       ?= $(call getprogswithdir,$(PROGS.c) )
-SRC.c           ?= $(filter-out $(PROGSRC.c),$(ALLSRC.c) )
+ALLSRC.c        ?= $(strip $(call getsrcs,$(SRCSUFX.c)))
+PROGSRC.c       ?= $(strip $(call getprogswithdir,$(PROGS.c)))
+SRC.c           ?= $(strip $(filter-out $(PROGSRC.c),$(ALLSRC.c)))
 
-ALLSRC.cc       ?= $(call getsrcs,$(SRCSUFX.cc)) 
-PROGSRC.cc      ?= $(call getprogswithdir,$(PROGS.cc) )
-SRC.cc          ?= $(filter-out $(PROGSRC.cc),$(ALLSRC.cc) )
+ALLSRC.cc       ?= $(strip $(call getsrcs,$(SRCSUFX.cc)))
+PROGSRC.cc      ?= $(strip $(call getprogswithdir,$(PROGS.cc)))
+SRC.cc          ?= $(strip $(filter-out $(PROGSRC.cc),$(ALLSRC.cc)))
+
+ALLSRC.bas      ?= $(strip $(call getsrcs,$(SRCSUFX.bas)))
+PROGSRC.bas     ?= $(strip $(call getprogswithdir,$(PROGS.bas)))
+SRC.bas         ?= $(strip $(filter-out $(PROGSRC.bas),$(ALLSRC.bas)))
+
+ALLSRC.asm      ?= $(strip $(call getsrcs,$(SRCSUFX.asm)))
+PROGSRC.asm     ?= $(strip $(call getprogswithdir,$(PROGS.asm)))
+SRC.asm         ?= $(strip $(filter-out $(PROGSRC.asm),$(ALLSRC.asm)))
 
 # Source types which cannot produce a program
-SRC.pasm        ?= $(call getsrcs, $(SRCSUFX.pasm))
-SRC.dts         ?= $(call getsrcs, $(SRCSUFX.dts))
+ALLSRC.pasm     ?= $(strip $(call getsrcs, $(SRCSUFX.pasm)))
+ALLSRC.dts      ?= $(strip $(call getsrcs, $(SRCSUFX.dts)))
 
 # Taking things together
-PROGS.all       ?= $(PROGS.c) $(PROGS.cc) $(PROGS.bas) $(PROGS.asm) 
-PROGSRC.all     ?= $(PROGSRC.c) $(PROGSRC.cc) $(PROGSRC.bas) $(PROGSRC.asm) 
+PROGS.all       ?= $(strip $(PROGS.c) $(PROGS.cc) $(PROGS.bas) $(PROGS.asm) )
+PROGSRC.all     ?= $(strip$(PROGSRC.c) $(PROGSRC.cc) $(PROGSRC.bas) \
+                   $(PROGSRC.asm) )
+ALLSRC.all      ?= $(strip $(ALLSRC.c) $(ALLSRC.cc) $(ALLSRC.bas) \
+                   $(ALLSRC.asm) $(ALLSRC.pasm) $(ALLSRC.dts) )
 
 #---------------------------------------------------------------------------
-# C/C++
+# General
 #---------------------------------------------------------------------------
-SRC.objs   ?= $(ALLSRC.c) $(AllSRC.cc)
-OBJS       ?= $(addprefix $(OBJDIR)/, $(notdir $(addsuffix .o, \
-			$(basename $(SRC.objs))) ))
-DEPS       ?= $(OBJS:.o=.d)
+DEPS.all        ?=
+TARGETS.all     ?=
 
-# Construct targets in BINDIR
-ifeq ($(BINDIR),)
-  TARGETS.c     ?= $(notdir $(basename $(PROGSRC.c)))
-  TARGETS.cc    ?= $(notdir $(basename $(PROGSRC.cc)))
-else
-  TARGETS.c     ?= $(addprefix $(strip $(BINDIR))/, \
-		    $(notdir $(basename $(PROGSRC.c))))
-  TARGETS.cc    ?= $(addprefix $(strip $(BINDIR))/, \
-		    $(notdir $(basename $(PROGSRC.cc))))
+#---------------------------------------------------------------------------
+# Include base flags and targets by language
+#---------------------------------------------------------------------------
+ALLSRC.cxx      := $(strip $(ALLSRC.c) $(ALLSRC.cc))
+ifneq ($(ALLSRC.cxx),)
+  include LaMake/base.cxx.mk
 endif
 
-TARGETS.all     ?= $(TARGETS.c) $(TARGETS.cc) $(TARGETS.bas) $(TARGETS.asm) 
+ifneq ($(ALLSRC.bas),)
+  include LaMake/base.bas.mk
+endif
 
 
-
-
-
+#---------------------------------------------------------------------------
+# Rules
+#---------------------------------------------------------------------------
 .PHONY: all objs deps clean show install uninstall test doc directories
 
-all: directories $(TARGETS.all)
+all: directories $(OBJS.all) $(TARGETS.all)
 
-directories: $(OBJDIR)
+# Rule for making sure .obj dir exists
+directories: $(OBJDIR) $(LIBDIR)
 
 $(OBJDIR):
 	$(MKDIR_P) $(OBJDIR)
 
+$(LIBDIR):
+	$(MKDIR_P) $(LIBDIR)
 
-# Rules for creating dependency files (.d).
-# Rules for generating object files (.o).
-include LaMake/objs.mk
 
-# Rules for generating the executables.
-#-------------------------------------
-$(TARGETS.c):$(OBJS) $(DEPS)
-	$(LINK.c)   $(OBJS) $(MY_LIBS) -o $@
+#---------------------------------------------------------------------------
+# Language specific rules
+#---------------------------------------------------------------------------
+ifneq ($(ALLSRC.cxx),)
+ include LaMake/rules.cxx.mk
+endif
 
-$(TARGETS.cc):$(OBJS) $(DEPS)
-	$(LINK.cxx) $(OBJS) $(MY_LIBS) -o $@
-
-ifndef NODEP
-  ifneq ($(DEPS),)
-    ifneq ("$(wildcard $(OBJDIR))","") # IF OBJDIR directory exists THEN
-      -include $(DEPS)                 # include existing dependencies
-    endif
-  endif
+ifneq ($(ALLSRC.bas),)
+ include LaMake/rules.bas.mk
 endif
 
 clean:
-	$(RM) $(OBJS) $(DEPS) $(TARGETS.all) *.o *.d *~ $(INCDIR)/*~ 
+	$(RM) $(OBJS) $(DEPS) $(TARGETS.all) .obj/*.o *.o *.d *~ \
+        $(INCDIR)/*~ $(LOG)
 
 
+include LaMake/show.mk
 
-
-# Show variables (for debug use only.)
-show:
-	@echo '++ PROGRAMS     :' $(PROGRAMS)
-	@echo '++ SRCDIRS      :' $(SRCDIRS)
-	@echo '+++ C     ++++++'
-	@echo '++ PROGS.c      :' $(PROGS.c)
-	@echo '++ ALLSRC.c     :' $(ALLSRC.c)
-	@echo '++ PROGSRC.c    :' $(PROGSRC.c)
-	@echo '++ SRC.c        :' $(SRC.c)
-	@echo '++ TARGETS.c    :' $(TARGETS.c)
-	@echo '+++ C++   ++++++'
-	@echo '++ PROGS.cc     :' $(PROGS.cc)
-	@echo '++ ALLSRC.cc    :' $(ALLSRC.cc)
-	@echo '++ PROGSRC.cc   :' $(PROGSRC.cc)
-	@echo '++ SRC.cc       :' $(SRC.cc)
-	@echo '++ TARGETS.cc   :' $(TARGETS.cc)
-	@echo '+++ BAS   ++++++'
-	@echo '++ PROGS.bas    :' $(PROGS.bas)
-	@echo '++ ALLSRC.bas   :' $(ALLSRC.bas)
-	@echo '++ PROGSRC.bas  :' $(PROGSRC.bas)
-	@echo '++ SRC.bas      :' $(SRC.bas)
-	@echo '+++ ASM   ++++++'
-	@echo '++ PROGS.asm    :' $(PROGS.asm)
-	@echo '++ ALLSRC.asm   :' $(ALLSRC.asm)
-	@echo '++ PROGSRC.asm  :' $(PROGSRC.asm)
-	@echo '++ SRC.asm      :' $(SRC.asm)
-	@echo '+++ other ++++++'
-	@echo '++ SRC.pasm     :' $(SRC.pasm)
-	@echo '++ SRC.dts      :' $(SRC.dts)
-	@echo '+++ targets ++++'
-	@echo '++ PROGS.all    :' $(PROGS.all)
-	@echo '++ PROGSRC.all  :' $(PROGSRC.all)
-	@echo '++ TARGETS.all  :' $(TARGETS.all)
-	@echo '++ SRC.obj      :' $(SRC.obj)
-	@echo '++ OBJS         :' $(OBJS)
-	@echo '++ DEPS         :' $(DEPS)
-	@echo '+++ Tools ++++++'
-	@echo '++ CC           :' $(CC)
-	@echo '++ CXX          :' $(CXX)
-	@echo '++ PASM         :' $(PASM)
-	@echo '++ BAS          :' $(BAS)
-	@echo '++ DEP_OPT      :' $(DEP_OPT)
-	@echo '++ DEPEND       :' $(DEPEND)
-	@echo '++ DEPEND.d     :' $(DEPEND.d)
-	@echo '++ COMPILE.c    :' $(COMPILE.c)
-	@echo '++ COMPILE.cxx  :' $(COMPILE.cxx)
-	@echo '++ LINK.c       :' $(LINK.c)
-	@echo '++ LINK.cxx     :' $(LINK.cxx)
- 
 #####  NOTES ####
 
 # ronn can be used to convert .md to man pages:
