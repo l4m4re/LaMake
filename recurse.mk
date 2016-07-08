@@ -25,8 +25,11 @@ SUBDIRS ?= $(wildcard src doc test)
 # into which the installation will be diverted. From this directory it
 # is easy to review which files are being installed where, and finally
 # copy them to their final location by some means."
-export prefix ?= $(DESTDIR)/usr  
-
+export INST_DIR_ROOT := $(DESTDIR)/
+export INST_DIR_USR  := $(DESTDIR)/usr
+export INST_DIR_BIN  := $(INST_DIR_USR)/bin
+export INST_DIR_INC  := $(INST_DIR_USR)/include
+export INST_DIR_LIB  := $(INST_DIR_USR)/lib
 
 #---------------------------------------------------------------------------
 # The dirty details aka implementation.
@@ -47,11 +50,11 @@ $(SUBDIRS): $(BUILDDIRS)
 $(BUILDDIRS):
 	$(MAKE) -C $(@:build-%=%)
 
-install: $(INSTALLDIRS) all
+install: all $(INSTALLDIRS)
 $(INSTALLDIRS):
 	$(MAKE) -C $(@:install-%=%) install
 
-uninstall: $(UNINSTALLDIRS) all
+uninstall: $(UNINSTALLDIRS)
 $(UNINSTALLDIRS):
 	$(MAKE) -C $(@:uninstall-%=%) uninstall
 

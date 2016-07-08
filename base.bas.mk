@@ -33,15 +33,34 @@ OBJS.bas         ?= $(addprefix $(OBJDIR)/, $(notdir $(addsuffix .o, \
 
 # Construct targets in BINDIR
 ifeq ($(BINDIR),)
-  TARGETS.bas    ?= $(notdir $(basename $(PROGSRC.bas)))
+  TARGETS.bas    ?= $(notdir $(basename $(BINSRC.bas)))
 else
   TARGETS.bas    ?= $(addprefix $(strip $(BINDIR))/, \
-		    $(notdir $(basename $(PROGSRC.bas))))
+		    $(notdir $(basename $(BINSRC.bas))))
 endif
 
+# The different types of install files and where they should go
+#  Binaries
+INST_FILES_BIN.bas    ?= $(TARGETS.bas)
+INST_DIR_BIN.bas      ?= $(INST_DIR_BIN)
+INST_TARGETS_BIN.bas  ?= $(addprefix $(strip $(INST_DIR_BIN.bas))/, \
+                         $(notdir $(INST_FILES_BIN.bas)) )
+#  Include files
+INST_FILES_INC.bas    ?= $(strip $(call getincs, $(HDRSUFX.bas) ))
+INST_DIR_INC.bas      ?= $(INST_DIR_INC)/freebasic
+INST_TARGETS_INC.bas  ?= $(addprefix $(strip $(INST_DIR_INC.bas))/, \
+                         $(notdir $(INST_FILES_INC.bas)) )
+#  Taken together in standard variables.
+INST_FILES.bas         = $(INST_FILES_BIN.bas) $(INST_FILES_INC.bas)
+INST_TARGETS.bas       = $(INST_TARGETS_BIN.bas) $(INST_TARGETS_INC.bas)
+
 # Add bas targets to global targets
-OBJS.all         += $(OBJS.bas)
-TARGETS.all      += $(TARGETS.bas)
+OBJS.all              += $(OBJS.bas)
+TARGETS.all           += $(TARGETS.bas)
+INST_FILES.all        += $(INST_FILES.bas)
+INST_TARGETS.all      += $(INST_TARGETS.bas)
+
+
 
 ## Some options from fbc man page:
 # http://www.freebasic.net/wiki/wikka.php?wakka=CatPgCompOpt

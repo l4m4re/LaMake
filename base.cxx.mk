@@ -64,11 +64,11 @@ OBJS.all        += $(OBJS.c) $(OBJS.cc)
 
 # Construct targets in BINDIR
 ifeq ($(BINDIR),)
-  TARGETS.c     ?= $(notdir $(basename $(PROGSRC.c)))
-  TARGETS.cc    ?= $(notdir $(basename $(PROGSRC.cc)))
+  TARGETS.c     ?= $(notdir $(basename $(BINSRC.c)))
+  TARGETS.cc    ?= $(notdir $(basename $(BINSRC.cc)))
 else
   TARGETS.c     ?= $(addprefix $(strip $(BINDIR))/, \
-		    $(notdir $(basename $(PROGSRC.c))))
+		    $(notdir $(basename $(BINSRC.c))))
   TARGETS.cc    ?= $(addprefix $(strip $(BINDIR))/, \
-		    $(notdir $(basename $(PROGSRC.cc))))
+		    $(notdir $(basename $(BINSRC.cc))))
 endif

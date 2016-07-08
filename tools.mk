@@ -11,6 +11,10 @@
 # 
 # The first things needed are some variable definitions.
 #
+
+# Directory where LaMake is to be found
+LAMAKE          := $(dir $(lastword $(MAKEFILE_LIST)))
+
 SHELL           ?= /bin/sh
 INSTALL         ?= /usr/bin/install
 INSTALL_PROGRAM ?= $(INSTALL)

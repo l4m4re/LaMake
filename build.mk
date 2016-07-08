@@ -11,11 +11,11 @@
 #===========================================================================
 
 #---------------------------------------------------------------------------
-# At leat one of these MUST be set by the user: If both PROGRAMS and
-# LIBNAME are set, the programs are built from the specified sources and
+# At leat one of these MUST be set by the user: If both BINARIES and
+# LIBNAME are set, the BINARIES are built from the specified sources and
 # a (shared) library will be built with the remaining sources.
 #---------------------------------------------------------------------------
-#PROGRAMS        = 
+#BINARIES        = 
 LIBNAME         ?= $(CURDIR)
 LIBTYPE         ?= static       # default: static
                                 # alternative: dylib for .so/.dll/dylib
@@ -45,6 +45,13 @@ LIBDIR          ?= ../lib
 ## Make sure there are no trailing spaces on the next line:
 OBJDIR           = .obj
 
+# Installation directories. Should be set&passed down from recurse.mk.
+INST_DIR_ROOT   ?= $(DESTDIR)/
+INST_DIR_USR    ?= $(DESTDIR)/usr
+INST_DIR_BIN    ?= $(INST_DIR_USR)/bin
+INST_DIR_INC    ?= $(INST_DIR_USR)/include
+INST_DIR_LIB    ?= $(INST_DIR_USR)/lib
+
 #---------------------------------------------------------------------------
 # Control variables
 #---------------------------------------------------------------------------
@@ -54,11 +61,12 @@ SRCSUFX.cc      ?= .cc .cpp .CPP .c++ .cxx .cp
 SRCSUFX.bas     ?= .bas .BAS
 SRCSUFX.pasm    ?= .p .P
 SRCSUFX.asm     ?= .s .S
-SRCSUFX.dts     ?= .dts .DTS
+SRCSUFX.dt      ?= .dts .DTS
 # Headers suffixes
 HDRSUFX.cpa     ?= .h .H .hh .hpp .HPP .h++ .hxx .hp  # C, C++, (p)asm
 HDRSUFX.bas     ?= .bi .BI                            # Basic
-#HDRSUFX.pasm    ?= .hp .HP                            # pasm
+#HDRSUFX.dt     ?= .dtsi                              # Linux Device Tree
+#HDRSUFX.pasm   ?= .hp .HP                            # pasm
 
 # Delete the default suffixes
 .SUFFIXES :
@@ -71,7 +79,7 @@ HDRSUFX.bas     ?= .bi .BI                            # Basic
 # used by LaMake:
 
 .SUFFIXES : $(SRCSUFX.c) $(SRCSUFX.cc) $(SRCSUFX.bas) $(SRCSUFX.pasm) \
-            $(SRCSUFX.asm) $(SRCSUFX.dts) \
+            $(SRCSUFX.asm) $(SRCSUFX.dt) \
             $(HDRSUFX.cpa) $(HDRSUFX.bas) $(HDRSUFX.pasm)
 
 
@@ -84,11 +92,13 @@ include LaMake/tools.mk
 #---------------------------------------------------------------------------
 # Sources
 #---------------------------------------------------------------------------
-# Split PROGRAMS variable (set by the user) into the PROGS for each type
-PROGS.c    ?= $(foreach sfx, $(SRCSUFX.c),   $(filter %$(sfx),$(PROGRAMS)))
-PROGS.cc   ?= $(foreach sfx, $(SRCSUFX.cc),  $(filter %$(sfx),$(PROGRAMS)))
-PROGS.bas  ?= $(foreach sfx, $(SRCSUFX.bas), $(filter %$(sfx),$(PROGRAMS)))
-PROGS.asm  ?= $(foreach sfx, $(SRCSUFX.asm), $(filter %$(sfx),$(PROGRAMS)))
+# Split BINARIES variable (set by the user) into the BINS for each type
+BINS.c    ?= $(strip $(foreach sfx, $(SRCSUFX.c),    $(filter %$(sfx),$(BINARIES))))
+BINS.cc   ?= $(strip $(foreach sfx, $(SRCSUFX.cc),   $(filter %$(sfx),$(BINARIES))))
+BINS.dt   ?= $(strip $(foreach sfx, $(SRCSUFX.dt),   $(filter %$(sfx),$(BINARIES))))
+BINS.bas  ?= $(strip $(foreach sfx, $(SRCSUFX.bas),  $(filter %$(sfx),$(BINARIES))))
+BINS.asm  ?= $(strip $(foreach sfx, $(SRCSUFX.asm),  $(filter %$(sfx),$(BINARIES))))
+BINS.pasm ?= $(strip $(foreach sfx, $(SRCSUFX.pasm), $(filter %$(sfx),$(BINARIES))))
 
 # Helper functions
 getsrcs          = $(foreach d, $(SRCDIRS), \
@@ -98,37 +108,53 @@ getprogswithdir  = $(foreach d, $(SRCDIRS), \
 		   $(foreach p, $(1),       \
 		   $(wildcard $(addprefix $(d)/,$(p)) )))
 
+# Used for finding include files for installation in a/o base.bas.mk
+getincs          = $(foreach d, $(INCDIRS), \
+		   $(foreach s, $(1),       \
+		   $(wildcard $(addprefix $(d)/*,$(s)) )))
+
 # Source types which can produce a program
 #
 # First set ALLSRC by calling getsrcs, so we get all existing sources of
-# a certain type. Then set PROGSRC by looking for PROGS in all SRCDIRS.
-# Finally, set SRC by filtering out the PROGSRC from ALLSRC.
+# a certain type. Then set BINSRC by looking for BINS in all SRCDIRS.
+# Finally, set SRC by filtering out the BINSRC from ALLSRC.
 ALLSRC.c        ?= $(strip $(call getsrcs,$(SRCSUFX.c)))
-PROGSRC.c       ?= $(strip $(call getprogswithdir,$(PROGS.c)))
-SRC.c           ?= $(strip $(filter-out $(PROGSRC.c),$(ALLSRC.c)))
+BINSRC.c       ?= $(strip $(call getprogswithdir,$(BINS.c)))
+SRC.c           ?= $(strip $(filter-out $(BINSRC.c),$(ALLSRC.c)))
 
 ALLSRC.cc       ?= $(strip $(call getsrcs,$(SRCSUFX.cc)))
-PROGSRC.cc      ?= $(strip $(call getprogswithdir,$(PROGS.cc)))
-SRC.cc          ?= $(strip $(filter-out $(PROGSRC.cc),$(ALLSRC.cc)))
+BINSRC.cc      ?= $(strip $(call getprogswithdir,$(BINS.cc)))
+SRC.cc          ?= $(strip $(filter-out $(BINSRC.cc),$(ALLSRC.cc)))
 
 ALLSRC.bas      ?= $(strip $(call getsrcs,$(SRCSUFX.bas)))
-PROGSRC.bas     ?= $(strip $(call getprogswithdir,$(PROGS.bas)))
-SRC.bas         ?= $(strip $(filter-out $(PROGSRC.bas),$(ALLSRC.bas)))
+BINSRC.bas     ?= $(strip $(call getprogswithdir,$(BINS.bas)))
+SRC.bas         ?= $(strip $(filter-out $(BINSRC.bas),$(ALLSRC.bas)))
 
 ALLSRC.asm      ?= $(strip $(call getsrcs,$(SRCSUFX.asm)))
-PROGSRC.asm     ?= $(strip $(call getprogswithdir,$(PROGS.asm)))
-SRC.asm         ?= $(strip $(filter-out $(PROGSRC.asm),$(ALLSRC.asm)))
+BINSRC.asm     ?= $(strip $(call getprogswithdir,$(BINS.asm)))
+SRC.asm         ?= $(strip $(filter-out $(BINSRC.asm),$(ALLSRC.asm)))
+
+ALLSRC.pasm     ?= $(strip $(call getsrcs, $(SRCSUFX.pasm)))
+BINSRC.pasm    ?= $(strip $(call getprogswithdir,$(BINS.pasm)))
+SRC.pasm        ?= $(strip $(filter-out $(BINSRC.pasm),$(ALLSRC.pasm)))
+
+# Linux Device Tree
+ALLSRC.dt       ?= $(strip $(call getsrcs, $(SRCSUFX.dt)))
+BINSRC.dt      ?= $(strip $(call getprogswithdir,$(BINS.dt)))
+SRC.dt          ?= $(strip $(filter-out $(BINSRC.dt),$(ALLSRC.dt)))
+
 
 # Source types which cannot produce a program
-ALLSRC.pasm     ?= $(strip $(call getsrcs, $(SRCSUFX.pasm)))
-ALLSRC.dts      ?= $(strip $(call getsrcs, $(SRCSUFX.dts)))
+# None at this point
+
 
 # Taking things together
-PROGS.all       ?= $(strip $(PROGS.c) $(PROGS.cc) $(PROGS.bas) $(PROGS.asm) )
-PROGSRC.all     ?= $(strip$(PROGSRC.c) $(PROGSRC.cc) $(PROGSRC.bas) \
-                   $(PROGSRC.asm) )
+BINS.all       ?= $(strip $(BINS.c) $(BINS.cc) $(BINS.bas) \
+                   $(BINS.asm) $(BINS.pasm) $(BINS.dt)  )
+BINSRC.all     ?= $(strip$(BINSRC.c) $(BINSRC.cc) $(BINSRC.bas) \
+                   $(BINSRC.asm) $(BINSRC.pasm) $(BINS.dt) )
 ALLSRC.all      ?= $(strip $(ALLSRC.c) $(ALLSRC.cc) $(ALLSRC.bas) \
-                   $(ALLSRC.asm) $(ALLSRC.pasm) $(ALLSRC.dts) )
+                   $(ALLSRC.asm) $(ALLSRC.pasm) $(ALLSRC.dt) )
 
 #---------------------------------------------------------------------------
 # General
@@ -148,13 +174,20 @@ ifneq ($(ALLSRC.bas),)
   include LaMake/base.bas.mk
 endif
 
+ifneq ($(ALLSRC.pasm),)
+  include LaMake/base.pasm.mk
+endif
+
+ifneq ($(ALLSRC.dt),)
+  include LaMake/base.dt.mk
+endif
 
 #---------------------------------------------------------------------------
 # Rules
 #---------------------------------------------------------------------------
 .PHONY: all objs deps clean show install uninstall test doc directories
 
-all: directories $(OBJS.all) $(TARGETS.all)
+all: init directories $(OBJS.all) $(TARGETS.all)
 
 # Rule for making sure .obj dir exists
 directories: $(OBJDIR) $(LIBDIR)
@@ -164,6 +197,9 @@ $(OBJDIR):
 
 $(LIBDIR):
 	$(MKDIR_P) $(LIBDIR)
+
+init:
+	@-$(RM) $(LOG)
 
 
 #---------------------------------------------------------------------------
@@ -177,9 +213,28 @@ ifneq ($(ALLSRC.bas),)
  include LaMake/rules.bas.mk
 endif
 
+ifneq ($(ALLSRC.pasm),)
+ include LaMake/rules.pasm.mk
+endif
+
+ifneq ($(ALLSRC.dt),)
+  include LaMake/rules.dt.mk
+endif
+
 clean:
 	$(RM) $(OBJS) $(DEPS) $(TARGETS.all) .obj/*.o *.o *.d *~ \
         $(INCDIR)/*~ $(LOG)
+
+install: install.bas install.dt
+
+uninstall: 
+	@for filenm in $(INST_TARGETS.all) ; \
+	do \
+	    if [ -e $$filenm ] ; then         \
+		    rm -fv $$filenm ; \
+	    fi \
+	done
+
 
 
 include LaMake/show.mk

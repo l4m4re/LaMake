@@ -69,3 +69,28 @@ $(BINDIR)/% : %.BAS
 #$(TARGETS.bas):$(OBJS.bas)
 #	$(LINK.bas) $(OBJS.bas) -o $@
 
+# Installation
+
+.PHONY: installinc.bas installbin.bas install.bas 
+
+# install binaries
+installbin.bas: $(INST_TARGETS_BIN.bas)
+
+$(INST_TARGETS_BIN.bas):
+	@echo "Installing FreeBasic binaries.."
+	@$(MKDIR_P) $(INST_DIR_BIN.bas)
+	@$(INSTALL) $(INST_FILES_BIN.bas) $(INST_DIR_BIN.bas)
+
+# install include files
+installinc.bas: $(INST_TARGETS_INC.bas)
+
+$(INST_TARGETS_INC.bas):
+	@echo "Installing FreeBasic include files.."
+	@$(MKDIR_P) $(INST_DIR_INC.bas)
+	@$(INSTALL) $(INST_FILES_INC.bas) $(INST_DIR_INC.bas)
+
+install.bas: $(TARGETS.bas) installbin.bas installinc.bas
+
+
+
+
