@@ -37,7 +37,7 @@ endif
 # The different types of install files and where they should go
 #  Overlay binaries
 INST_FILES_BIN.dt    ?= $(TARGETS.dt)
-INST_DIR_BIN.dt      ?= $(INST_DIR_ROOT)lib/firmware
+INST_DIR_BIN.dt      ?= $(INST_DIR_FIRMWARE)
 INST_TARGETS_BIN.dt  ?= $(addprefix $(strip $(INST_DIR_BIN.dt))/, \
 		        $(notdir $(INST_FILES_BIN.dt)) )
 #  Udev rules

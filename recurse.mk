@@ -18,6 +18,7 @@ SUBDIRS ?= $(wildcard src doc test)
 #---------------------------------------------------------------------------
 #
 # https://www.gnu.org/software/automake/manual/html_node/DESTDIR.html
+#
 # "The DESTDIR variable can be used to perform a staged installation.
 # The package should be configured as if it was going to be installed in
 # its final location (e.g., --prefix /usr), but when running make
@@ -25,11 +26,22 @@ SUBDIRS ?= $(wildcard src doc test)
 # into which the installation will be diverted. From this directory it
 # is easy to review which files are being installed where, and finally
 # copy them to their final location by some means."
-export INST_DIR_ROOT := $(DESTDIR)/
-export INST_DIR_USR  := $(DESTDIR)/usr
-export INST_DIR_BIN  := $(INST_DIR_USR)/bin
-export INST_DIR_INC  := $(INST_DIR_USR)/include
-export INST_DIR_LIB  := $(INST_DIR_USR)/lib
+#
+# For building debian packages, add the line:
+#  export PREFIX:=/usr
+# to the "rules" file in your debian directory. 
+PREFIX                    ?= /usr/local
+
+export INST_DIR_ROOT      := $(DESTDIR)/
+export INST_DIR_USR       := $(DESTDIR)/$(PREFIX)
+ifeq ($(PREFIX),/usr/local)
+ export INST_DIR_FIRMWARE := $(DESTDIR)/usr/local/lib/firmware
+else
+ export INST_DIR_FIRMWARE := $(DESTDIR)/lib/firmware
+endif
+export INST_DIR_BIN       := $(INST_DIR_USR)/bin
+export INST_DIR_INC       := $(INST_DIR_USR)/include
+export INST_DIR_LIB       := $(INST_DIR_USR)/lib
 
 #---------------------------------------------------------------------------
 # The dirty details aka implementation.

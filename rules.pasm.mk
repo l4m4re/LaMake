@@ -60,10 +60,10 @@ endef
 #% : %.pasm
 #	$(gen-pasm-prog)
 
-$(BINDIR)/%.bin : %.p
+$(strip $(BINDIR))/%.bin : %.p
 	$(gen-pasm-prog)
 
-$(BINDIR)/%.bin : %.P
+$(strip $(BINDIR))/%.bin : %.P
 	$(gen-pasm-prog)
 
 #$(TARGETS.pasm):$(OBJS.pasm)

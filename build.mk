@@ -45,12 +45,14 @@ LIBDIR          ?= ../lib
 ## Make sure there are no trailing spaces on the next line:
 OBJDIR           = .obj
 
-# Installation directories. Should be set&passed down from recurse.mk.
-INST_DIR_ROOT   ?= $(DESTDIR)/
-INST_DIR_USR    ?= $(DESTDIR)/usr
-INST_DIR_BIN    ?= $(INST_DIR_USR)/bin
-INST_DIR_INC    ?= $(INST_DIR_USR)/include
-INST_DIR_LIB    ?= $(INST_DIR_USR)/lib
+# Installation directories. Should be set&passed down from recurse.mk,
+# but it's handy for testing installation of a subdir seperately.
+INST_DIR_ROOT     ?= $(DESTDIR)/
+INST_DIR_USR      ?= $(DESTDIR)/usr/local
+INST_DIR_FIRMWARE ?= $(DESTDIR)/usr/local/lib/firmware
+INST_DIR_BIN      ?= $(INST_DIR_USR)/bin
+INST_DIR_INC      ?= $(INST_DIR_USR)/include
+INST_DIR_LIB      ?= $(INST_DIR_USR)/lib
 
 #---------------------------------------------------------------------------
 # Control variables
@@ -119,28 +121,28 @@ getincs          = $(foreach d, $(INCDIRS), \
 # a certain type. Then set BINSRC by looking for BINS in all SRCDIRS.
 # Finally, set SRC by filtering out the BINSRC from ALLSRC.
 ALLSRC.c        ?= $(strip $(call getsrcs,$(SRCSUFX.c)))
-BINSRC.c       ?= $(strip $(call getprogswithdir,$(BINS.c)))
+BINSRC.c        ?= $(strip $(call getprogswithdir,$(BINS.c)))
 SRC.c           ?= $(strip $(filter-out $(BINSRC.c),$(ALLSRC.c)))
 
 ALLSRC.cc       ?= $(strip $(call getsrcs,$(SRCSUFX.cc)))
-BINSRC.cc      ?= $(strip $(call getprogswithdir,$(BINS.cc)))
+BINSRC.cc       ?= $(strip $(call getprogswithdir,$(BINS.cc)))
 SRC.cc          ?= $(strip $(filter-out $(BINSRC.cc),$(ALLSRC.cc)))
 
 ALLSRC.bas      ?= $(strip $(call getsrcs,$(SRCSUFX.bas)))
-BINSRC.bas     ?= $(strip $(call getprogswithdir,$(BINS.bas)))
+BINSRC.bas      ?= $(strip $(call getprogswithdir,$(BINS.bas)))
 SRC.bas         ?= $(strip $(filter-out $(BINSRC.bas),$(ALLSRC.bas)))
 
 ALLSRC.asm      ?= $(strip $(call getsrcs,$(SRCSUFX.asm)))
-BINSRC.asm     ?= $(strip $(call getprogswithdir,$(BINS.asm)))
+BINSRC.asm      ?= $(strip $(call getprogswithdir,$(BINS.asm)))
 SRC.asm         ?= $(strip $(filter-out $(BINSRC.asm),$(ALLSRC.asm)))
 
 ALLSRC.pasm     ?= $(strip $(call getsrcs, $(SRCSUFX.pasm)))
-BINSRC.pasm    ?= $(strip $(call getprogswithdir,$(BINS.pasm)))
+BINSRC.pasm     ?= $(strip $(call getprogswithdir,$(BINS.pasm)))
 SRC.pasm        ?= $(strip $(filter-out $(BINSRC.pasm),$(ALLSRC.pasm)))
 
 # Linux Device Tree
 ALLSRC.dt       ?= $(strip $(call getsrcs, $(SRCSUFX.dt)))
-BINSRC.dt      ?= $(strip $(call getprogswithdir,$(BINS.dt)))
+BINSRC.dt       ?= $(strip $(call getprogswithdir,$(BINS.dt)))
 SRC.dt          ?= $(strip $(filter-out $(BINSRC.dt),$(ALLSRC.dt)))
 
 
@@ -187,20 +189,24 @@ endif
 #---------------------------------------------------------------------------
 .PHONY: all objs deps clean show install uninstall test doc directories
 
-all: init directories $(OBJS.all) $(TARGETS.all)
+all: init directories $(OBJS.all) $(TARGETS.all) $(MY_TARGETS)
 
-# Rule for making sure .obj dir exists
-directories: $(OBJDIR) $(LIBDIR)
+# Rule for making sure directories exists
+directories: objdir bindir libdir 
 
-$(OBJDIR):
-	$(MKDIR_P) $(OBJDIR)
+.PHONY: objdir bindir libdir
 
-$(LIBDIR):
-	$(MKDIR_P) $(LIBDIR)
+objdir:
+	@$(MKDIR_P) $(OBJDIR)
+
+bindir:
+	@$(MKDIR_P) $(BINDIR)
+
+libdir:
+	@$(MKDIR_P) $(LIBDIR)
 
 init:
 	@-$(RM) $(LOG)
-
 
 #---------------------------------------------------------------------------
 # Language specific rules
@@ -223,7 +229,7 @@ endif
 
 clean:
 	$(RM) $(OBJS) $(DEPS) $(TARGETS.all) .obj/*.o *.o *.d *~ \
-        $(INCDIR)/*~ $(LOG)
+        $(INCDIR)/*~ $(LOG) $(MY_CLEAN)
 
 install: install.bas install.dt
 

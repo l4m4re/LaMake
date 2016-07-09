@@ -60,10 +60,10 @@ endef
 #% : %.BAS
 #	$(gen-bas-prog)
 
-$(BINDIR)/% : %.bas
+$(strip $(BINDIR))/% : %.bas
 	$(gen-bas-prog)
 
-$(BINDIR)/% : %.BAS
+$(strip (BINDIR))/% : %.BAS
 	$(gen-bas-prog)
 
 #$(TARGETS.bas):$(OBJS.bas)

@@ -11,9 +11,8 @@ define gen-overlay
 endef
 
 
-$(BINDIR)/%-$(VERSION.dt).dtbo : %.dts
+$(strip $(BINDIR))/%-$(VERSION.dt).dtbo : %.dts
 	$(gen-overlay)
-
 
 
 #---
