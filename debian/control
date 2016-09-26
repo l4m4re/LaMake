@@ -1,15 +1,46 @@
 Source: lamake
-Section: unknown
+Section: devel
 Priority: extra
 Maintainer: Arend Lammertink <lamare@gmail.com>
 Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.9.3
-Homepage: <insert the upstream URL, if relevant>
+Homepage: https://github.com/l4m4re/LaMake
 #Vcs-Git: git://git.debian.org/collab-maint/lamake.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/lamake.git;a=summary
 
 Package: lamake
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Description: Generic build & install system for (embedded) projects
+ If you're a programmer and anything like me, you don't like to spend
+ your time on writing makefiles, especially not for small/simple
+ projects. Deep down, you know makefiles are pretty powerful and that you
+ should probably learn how to make these, but, yeah, the syntax is awful
+ and you just never got to looking into it. At least, I didn't.
+ .
+ Years ago, at my first real programming job, we had a very nice make
+ system called PMake. The idea was that the make system assisted you in
+ keeping your software, a large project, organized. There was a Makefile
+ in every source directory, in which you pretty much specified which
+ sources were to go into libraries, which were program sources and which
+ subsystems your sources were dependent upon. As in: which libraries do
+ you use? And then you included Pmake, which did the hard work for you.
+ .
+ With this concept in mind, I made LaMake, intended for not too-big
+ projects, such as embedded projects for a BeagleBone, where you make
+ some executables and/or a single library, which you install in /usr or
+ /usr/local/. Actually, I made this specifically to build relatively
+ small projects for the Beagle, with a Debian-based Linux OS, such that
+ one can easily make Debian packages out of your project, which basically
+ means: supporting "make install" and, preferably, "make uninstall".
+ .
+ Another basic concept in LaMake is: "use reasonable defaults, but allow
+ exceptions". That's why a made a lot of use of "?=" assignments. By
+ default, all variables assigned using ?= are assigned a "reasonable
+ default", but you can override these defaults by assigning something
+ else before including a LaMake makefile. This gives you a simple system
+ to start with, just say which sources are to become programs, while also
+ givig you the opportunity to fine-tune the system in case you need it.
+ .
+ GNU make is expected when using these makefiles. Other versions of make
+ may or may not work.

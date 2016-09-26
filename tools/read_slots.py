@@ -2,6 +2,8 @@
 __author__ = "archuser"
 
 # Source: https://github.com/IlikePepsi/dt-overlays
+# Maintainer: Arend Lammertink <lamare@gmail.com>
+# License: GPL-2.0+, with permission from "IlikePepsi".
 
 
 import argparse

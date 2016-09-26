@@ -1,5 +1,5 @@
-lamake (0.1) unstable; urgency=low
+lamake (0.1) wheezy; urgency=low
 
   * Initial Release.
 
- -- Arend Lammertink <lamare@gmail.com>  Sat, 09 Jul 2016 13:19:05 +0000
+ -- Arend Lammertink <lamare@gmail.com>  Fri, 23 Sep 2016 09:11:14 +0000
